@@ -14,7 +14,6 @@ import com.iflytek.cloud.RecognizerResult;
 import com.iflytek.cloud.SpeechConstant;
 import com.iflytek.cloud.SpeechError;
 import com.iflytek.cloud.SpeechRecognizer;
-import com.iflytek.sunflower.FlowerCollector;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,6 +68,11 @@ public abstract class BaseSpeechActivity extends AppCompatActivity {
             audioWavePopupView.setTips("正在语音转文字");
         }
 
+        /**
+         *
+         * @param results 语音识别的犯规方法
+         * @param isLast 是否第一次讲话结束
+         */
         @Override
         public void onResult(RecognizerResult results, boolean isLast) {
             printResult(results);
@@ -79,8 +83,13 @@ public abstract class BaseSpeechActivity extends AppCompatActivity {
             }
         }
 
+        /**
+         * 识别失败
+         * @param error
+         */
         @Override
         public void onError(SpeechError error) {
+            System.out.println("------失败了"+error.getErrorDescription());
             String errorTips = error.getPlainDescription(true);
 
             showTip(errorTips);
@@ -149,9 +158,6 @@ public abstract class BaseSpeechActivity extends AppCompatActivity {
 
     public void startAISpeechAfterPermission() {
 
-        //移动数据分析，收集开始听写事件
-        FlowerCollector.onEvent(BaseSpeechActivity.this, "iat_recognize");
-
         mIatResults.clear();
 
         // 设置参数
@@ -168,7 +174,6 @@ public abstract class BaseSpeechActivity extends AppCompatActivity {
             audioWavePopupView.showPopupWindow(myViewParent, BaseSpeechActivity.this);
             audioWavePopupView.startWaveView();
         }
-
     }
 
     /**
@@ -190,8 +195,8 @@ public abstract class BaseSpeechActivity extends AppCompatActivity {
         // 设置语言区域
         mIat.setParameter(SpeechConstant.ACCENT, "zh_cn");
 
-
-        mIat.setParameter(SpeechConstant.VOLUME, "100");// 设置音量，范围 0~100
+        // 设置音量，范围 0~100
+        mIat.setParameter(SpeechConstant.VOLUME, "100");
 
         // 设置语音前端点:静音超时时间，即用户多长时间不说话则当做超时处理
         mIat.setParameter(SpeechConstant.VAD_BOS, "4000");
@@ -203,9 +208,10 @@ public abstract class BaseSpeechActivity extends AppCompatActivity {
         mIat.setParameter(SpeechConstant.ASR_PTT, "1");
 
         // 设置音频保存路径，保存音频格式支持pcm、wav，设置路径为sd卡请注意WRITE_EXTERNAL_STORAGE权限
+        mIat.setParameter(SpeechConstant.ASR_AUDIO_PATH, Environment.getExternalStorageDirectory() + "/msc/iat.wav");
+
         // 注：AUDIO_FORMAT参数语记需要更新版本才能生效
         mIat.setParameter(SpeechConstant.AUDIO_FORMAT, "wav");
-        mIat.setParameter(SpeechConstant.ASR_AUDIO_PATH, Environment.getExternalStorageDirectory() + "/msc/iat.wav");
     }
 
     public void showTip(String data) {
@@ -217,7 +223,7 @@ public abstract class BaseSpeechActivity extends AppCompatActivity {
         Gson gson = new Gson();
         Voice voiceBean = gson.fromJson(results.getResultString(), Voice.class);
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         ArrayList<Voice.WSBean> ws = voiceBean.ws;
         for (Voice.WSBean wsBean : ws) {
             String word = wsBean.cw.get(0).w;

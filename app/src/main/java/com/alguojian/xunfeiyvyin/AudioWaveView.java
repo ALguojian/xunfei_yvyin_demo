@@ -14,8 +14,6 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
-
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
